@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini-Powered MCQ Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #2d3748;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        .badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #4285f4 0%, #34a853 100%);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.4em;
+            font-weight: 600;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        .api-section {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-left: 4px solid #ff9800;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        .api-section h3 {
+            color: #856404;
+            margin-bottom: 15px;
+        }
+        .api-section input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ffc107;
+            border-radius: 6px;
+            font-size: 1em;
+            margin-top: 10px;
+        }
+        .api-section a {
+            color: #0066cc;
+            font-weight: 600;
+        }
+        .input-section {
+            background: #f7fafc;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            border: 1px solid #e2e8f0;
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #4a5568;
+        }
+        input[type="text"],
+        input[type="file"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+        input[type="file"] {
+            border-style: dashed;
+            cursor: pointer;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .btn-ai {
+            background: linear-gradient(135deg, #4285f4 0%, #34a853 100%);
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 30px;
+            background: #e3f2fd;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+        .loading.active {
+            display: block;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4285f4;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .mcq {
+            background: white;
+            border: 2px solid #e2e8f0;
+            padding: 25px;
+            margin-bottom: 25px;
+            border-radius: 12px;
+        }
+        .mcq-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            margin: -25px -25px 20px -25px;
+            border-radius: 10px 10px 0 0;
+            font-size: 1.2em;
+            font-weight: 600;
+        }
+        .question-text {
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+            line-height: 1.6;
+        }
+        .stem {
+            padding: 15px;
+            margin-bottom: 12px;
+            background: #ffffff;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+        }
+        .stem-header {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .stem-letter {
+            background: #667eea;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+        }
+        .stem-text {
+            color: #4a5568;
+            margin-bottom: 12px;
+            line-height: 1.5;
+            padding-left: 36px;
+        }
+        .stem-options {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            padding-left: 36px;
+        }
+        .stem-options label {
+            display: inline-flex;
+            align-items: center;
+            margin: 0;
+            cursor: pointer;
+            font-weight: normal;
+        }
+        input[type="radio"] {
+            margin-right: 6px;
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+        }
+        .deselect-btn {
+            background: #fc8181;
+            padding: 6px 16px;
+            font-size: 0.85em;
+        }
+        .results {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-top: 30px;
+            font-size: 1.3em;
+            text-align: center;
+            font-weight: 600;
+            display: none;
+        }
+        .results.show {
+            display: block;
+        }
+        .feedback {
+            margin-top: 30px;
+            padding: 25px;
+            background: #f7fafc;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            display: none;
+        }
+        .feedback.show {
+            display: block;
+        }
+        .feedback h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        .feedback-item {
+            padding: 15px;
+            margin-bottom: 12px;
+            border-radius: 6px;
+        }
+        .correct {
+            background: #c6f6d5;
+            color: #22543d;
+            border-left: 4px solid #48bb78;
+        }
+        .incorrect {
+            background: #fed7d7;
+            color: #742a2a;
+            border-left: 4px solid #fc8181;
+        }
+        .unattempted {
+            background: #feebc8;
+            color: #744210;
+            border-left: 4px solid #ed8936;
+        }
+        .explanation {
+            margin-top: 8px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 4px;
+            font-size: 0.9em;
+            font-style: italic;
+        }
+        .message {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            display: none;
+        }
+        .message.success {
+            background: #f0fff4;
+            border-left: 4px solid #48bb78;
+            color: #22543d;
+            display: block;
+        }
+        .message.error {
+            background: #fff5f5;
+            border-left: 4px solid #f56565;
+            color: #742a2a;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🤖 Gemini-Powered MCQ Platform <span class="badge">GEMINI AI</span></h1>
+        <p>Auto-generate answers & explanations with Google Gemini</p>
+    </div>
+    
+    <div class="container">
+        <div class="api-section">
+            <h3>🔑 Setup: Enter Your Free Gemini API Key</h3>
+            <p style="margin-bottom: 10px; color: #856404;">Get your free API key from <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a></p>
+            <input type="password" id="apiKey" placeholder="Paste your Gemini API key here..." onchange="saveApiKey()">
+            <small style="color: #856404; display: block; margin-top: 8px;">
+                ✅ Your key is stored locally • Free tier: 15 requests/min • 1M tokens/day
+            </small>
+        </div>
+
+        <div class="input-section">
+            <div class="input-group">
+                <label for="topicName">📖 Topic Name</label>
+                <input type="text" id="topicName" placeholder="e.g., Intra Uterine Growth Retardation">
+            </div>
+            
+            <div class="input-group">
+                <label for="questionsFile">📄 Upload Questions CSV</label>
+                <input type="file" id="questionsFile" accept=".csv" onchange="handleQuestionsUpload(event)">
+            </div>
+
+            <button onclick="loadMCQs()" style="width: 100%; margin-bottom: 15px;">
+                📚 Load MCQs
+            </button>
+
+            <button class="btn-ai" onclick="generateAnswersWithGemini()" id="aiAnswerBtn" style="width: 100%; display: none;">
+                ✨ Generate Answers & Explanations with Gemini AI
+            </button>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <strong>Gemini AI is analyzing your MCQs...</strong>
+            <p>Generating answers and explanations. This may take 30-60 seconds.</p>
+        </div>
+
+        <div id="message"></div>
+
+        <div id="mcqs" class="mcq-container"></div>
+
+        <div class="input-section" id="submitSection" style="display: none;">
+            <div style="text-align: center;">
+                <button onclick="evaluateAnswers()" style="font-size: 1.1em; padding: 15px 40px;">
+                    📝 Submit & See Results
+                </button>
+            </div>
+        </div>
+
+        <div class="results" id="results"></div>
+        <div class="feedback" id="feedback"></div>
+        
+        <div style="text-align: center; margin-top: 20px;" id="downloadSection" style="display: none;">
+            <button onclick="downloadFeedback()">💾 Download Results</button>
+        </div>
+    </div>
+    
+    <script>
+        let questionsData = [];
+        let aiAnswers = [];
+        let aiExplanations = [];
+        const stemLetters = ['A', 'B', 'C', 'D', 'E'];
+
+        window.onload = function() {
+            const savedKey = localStorage.getItem('gemini_api_key');
+            if (savedKey) {
+                document.getElementById('apiKey').value = savedKey;
+            }
+        };
+
+        function saveApiKey() {
+            const apiKey = document.getElementById('apiKey').value.trim();
+            if (apiKey) {
+                localStorage.setItem('gemini_api_key', apiKey);
+                showMessage('✅ API key saved!', 'success');
+            }
+        }
+
+        function handleQuestionsUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const content = e.target.result;
+                parseQuestionsCSV(content);
+            };
+            reader.readAsText(file);
+        }
+
+        function parseQuestionsCSV(content) {
+            const lines = content.split(/\r?\n/).map(line => line.trim()).filter(line => line.length > 0);
+            
+            if (lines.length === 0) {
+                showMessage("❌ CSV file is empty!", 'error');
+                return;
+            }
+
+            const dataLines = lines.slice(1);
+            questionsData = [];
+            let currentMCQ = null;
+
+            dataLines.forEach(line => {
+                const matches = line.match(/("([^"]*)"|[^,]+)/g);
+                if (!matches || matches.length < 3) return;
+
+                const mcqNum = parseInt(matches[0].replace(/"/g, ''));
+                const stemNum = parseInt(matches[1].replace(/"/g, ''));
+                const text = matches[2].replace(/^"|"$/g, '').replace(/""/g, '"');
+
+                if (stemNum === 0) {
+                    currentMCQ = {
+                        number: mcqNum,
+                        question: text,
+                        stems: []
+                    };
+                    questionsData.push(currentMCQ);
+                } else {
+                    if (currentMCQ && currentMCQ.number === mcqNum) {
+                        currentMCQ.stems.push({
+                            number: stemNum,
+                            letter: stemLetters[stemNum - 1],
+                            text: text
+                        });
+                    }
+                }
+            });
+
+            showMessage(`✅ Successfully loaded ${questionsData.length} MCQ(s)!`, 'success');
+        }
+
+        function loadMCQs() {
+            const topicName = document.getElementById('topicName').value.trim();
+            
+            if (!topicName) {
+                showMessage("❌ Please enter a topic name.", 'error');
+                return;
+            }
+
+            if (questionsData.length === 0) {
+                showMessage("❌ Please upload the questions CSV file first.", 'error');
+                return;
+            }
+
+            displayMCQs();
+            document.getElementById('aiAnswerBtn').style.display = 'block';
+            showMessage('✅ MCQs loaded! Click "Generate Answers with Gemini AI" to get answers and explanations.', 'success');
+        }
+
+        function displayMCQs() {
+            const mcqsDiv = document.getElementById('mcqs');
+            mcqsDiv.innerHTML = '';
+
+            questionsData.forEach((mcq) => {
+                const mcqDiv = document.createElement('div');
+                mcqDiv.classList.add('mcq');
+                
+                let html = `
+                    <div class="mcq-header">MCQ ${mcq.number}</div>
+                    <div class="question-text">
+                        <strong>Question:</strong> ${mcq.question}
+                    </div>
+                `;
+
+                mcq.stems.forEach(stem => {
+                    html += `
+                        <div class="stem">
+                            <div class="stem-header">
+                                <span class="stem-letter">${stem.letter}</span>
+                                <span>Option ${stem.letter}</span>
+                            </div>
+                            <div class="stem-text">${stem.text}</div>
+                            <div class="stem-options">
+                                <label><input type="radio" name="mcq${mcq.number}stem${stem.number}" value="T"> True</label>
+                                <label><input type="radio" name="mcq${mcq.number}stem${stem.number}" value="F"> False</label>
+                                <button class="deselect-btn" onclick="deselectAnswer('mcq${mcq.number}stem${stem.number}')">Clear</button>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                mcqDiv.innerHTML = html;
+                mcqsDiv.appendChild(mcqDiv);
+            });
+            
+            document.getElementById('submitSection').style.display = 'block';
+        }
+
+        async function generateAnswersWithGemini() {
+            const apiKey = document.getElementById('apiKey').value.trim();
+            
+            if (!apiKey) {
+                showMessage('❌ Please enter your Gemini API key first!', 'error');
+                return;
+            }
+
+            if (questionsData.length === 0) {
+                showMessage("❌ Please load MCQs first!", 'error');
+                return;
+            }
+
+            const loading = document.getElementById('loading');
+            const aiBtn = document.getElementById('aiAnswerBtn');
+            
+            loading.classList.add('active');
+            aiBtn.disabled = true;
+
+            try {
+                let mcqText = '';
+                questionsData.forEach(mcq => {
+                    mcqText += `MCQ ${mcq.number}:\n`;
+                    mcqText += `Question: ${mcq.question}\n`;
+                    mcq.stems.forEach(stem => {
+                        mcqText += `${stem.letter}. ${stem.text}\n`;
+                    });
+                    mcqText += '\n';
+                });
+
+                const prompt = `You are a medical education expert. For each MCQ below, analyze each option (A, B, C, D, E) and determine if it is TRUE or FALSE. Then provide a brief explanation (1-2 sentences) for each option.
+
+Format your response EXACTLY like this for each MCQ:
+
+MCQ 1:
+A: T - [Brief explanation]
+B: F - [Brief explanation]
+C: T - [Brief explanation]
+D: F - [Brief explanation]
+E: T - [Brief explanation]
+
+MCQ 2:
+A: F - [Brief explanation]
+...and so on
+
+MCQs to analyze:
+${mcqText}
+
+Provide ONLY the answers and explanations in the format above.`;
+
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{
+                                text: prompt
+                            }]
+                        }]
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts[0]) {
+                    parseGeminiResponse(data.candidates[0].content.parts[0].text);
+                    showMessage('✅ Gemini AI has generated answers and explanations! You can now practice the MCQs.', 'success');
+                } else if (data.error) {
+                    throw new Error(data.error.message || 'API error');
+                } else {
+                    throw new Error('Invalid response from Gemini AI');
+                }
+
+            } catch (error) {
+                console.error('Gemini Error:', error);
+                let errorMsg = '❌ Gemini AI generation failed. ';
+                if (error.message.includes('API')) {
+                    errorMsg += 'Please check your API key.';
+                } else {
+                    errorMsg += 'Please check your internet connection and try again.';
+                }
+                showMessage(errorMsg, 'error');
+            } finally {
+                loading.classList.remove('active');
+                aiBtn.disabled = false;
+            }
+        }
+
+        function parseGeminiResponse(responseText) {
+            aiAnswers = [];
+            aiExplanations = [];
+
+            const mcqBlocks = responseText.split(/MCQ \d+:/);
+            
+            questionsData.forEach((mcq, mcqIndex) => {
+                const mcqAnswersArray = [];
+                const mcqExplArray = [];
+                
+                if (mcqIndex + 1 < mcqBlocks.length) {
+                    const block = mcqBlocks[mcqIndex + 1];
+                    const lines = block.split('\n').filter(l => l.trim());
+                    
+                    ['A', 'B', 'C', 'D', 'E'].forEach((letter) => {
+                        const line = lines.find(l => l.trim().startsWith(letter + ':'));
+                        if (line) {
+                            const match = line.match(/[A-E]:\s*([TF])\s*-\s*(.+)/i);
+                            if (match) {
+                                mcqAnswersArray.push(match[1].toUpperCase());
+                                mcqExplArray.push(match[2].trim());
+                            } else {
+                                mcqAnswersArray.push('F');
+                                mcqExplArray.push('No explanation provided');
+                            }
+                        } else {
+                            mcqAnswersArray.push('F');
+                            mcqExplArray.push('');
+                        }
+                    });
+                } else {
+                    mcqAnswersArray.push('F', 'F', 'F', 'F', 'F');
+                    mcqExplArray.push('', '', '', '', '');
+                }
+                
+                aiAnswers.push(mcqAnswersArray);
+                aiExplanations.push(mcqExplArray);
+            });
+        }
+
+        function deselectAnswer(stemName) {
+            const radios = document.getElementsByName(stemName);
+            radios.forEach(radio => radio.checked = false);
+        }
+
+        function evaluateAnswers() {
+            if (aiAnswers.length === 0) {
+                showMessage("❌ Please generate answers with Gemini AI first!", 'error');
+                return;
+            }
+
+            const topicName = document.getElementById('topicName').value.trim();
+            let totalScore = 0;
+            let feedback = '';
+            const totalMaxScore = questionsData.length * 5;
+            
+            questionsData.forEach((mcq, mcqIndex) => {
+                let mcqFeedback = `<h3>MCQ ${mcq.number}</h3>`;
+                let mcqScore = 0;
+
+                mcq.stems.forEach((stem, stemIndex) => {
+                    const correctValue = aiAnswers[mcqIndex][stemIndex];
+                    const explanation = aiExplanations[mcqIndex][stemIndex];
+                    const radios = document.getElementsByName(`mcq${mcq.number}stem${stem.number}`);
+                    let selectedValue = null;
+
+                    radios.forEach(radio => {
+                        if (radio.checked) selectedValue = radio.value.toUpperCase();
+                    });
+
+                    let itemClass = '';
+                    let statusText = '';
+                    
+                    if (!selectedValue) {
+                        itemClass = 'unattempted';
+                        statusText = 'Unattempted';
+                    } else if (selectedValue === correctValue) {
+                        itemClass = 'correct';
+                        statusText = 'Correct ✓';
+                        mcqScore++;
+                    } else {
+                        itemClass = 'incorrect';
+                        statusText = `Incorrect (Correct: ${correctValue})`;
+                        mcqScore--;
+                    }
+
+                    mcqFeedback += `
+                        <div class="feedback-item ${itemClass}">
+                            <strong>Option ${stem.letter}:</strong> ${statusText}
+                            ${explanation ? `<div class="explanation">💡 ${explanation}</div>` : ''}
+                        </div>
+                    `;
+                });
+
+                if (mcqScore < 0) mcqScore = 0;
+                totalScore += mcqScore;
+                feedback += mcqFeedback;
+            });
+
+            const resultDiv = document.getElementById('results');
+            const feedbackDiv = document.getElementById('feedback');
+
+            const percentage = ((totalScore / totalMaxScore) * 100).toFixed(2);
+            resultDiv.innerHTML = `<strong>${topicName}</strong><br>Score: ${totalScore}/${totalMaxScore} (${percentage}%)`;
+            resultDiv.classList.add('show');
+            
+            feedbackDiv.innerHTML = feedback;
+            feedbackDiv.classList.add('show');
+            
+            document.getElementById('downloadSection').style.display = 'block';
+            resultDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function downloadFeedback() {
+            const topicName = document.getElementById('topicName').value.trim() || 'MCQ';
+            const feedbackText = document.getElementById('feedback').innerText;
+            const resultsText = document.getElementById('results').innerText;
+            const fullText = resultsText + '\n\n' + feedbackText;
+            
+            const blob = new Blob([fullText], { type: 'text/plain' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `${topicName}_results.txt`;
+            link.click();
+        }
+
+        function showMessage(text, type) {
+            const message = document.getElementById('message');
+            message.className = 'message ' + type;
+            message.innerHTML = text;
+        }
+    </script>
+</body>
+</html>
